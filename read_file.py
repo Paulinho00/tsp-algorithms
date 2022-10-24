@@ -20,7 +20,7 @@ def read_data_txt(filename):
 def read_data_tsp(filename):
     tsp = tsplib95.load(filename)
     graph = tsp.get_graph()
-    adjacency_matrix = networkx.to_numpy_matrix(graph)
+    adjacency_matrix = networkx.to_numpy_array(graph)
 
     return adjacency_matrix, len(adjacency_matrix)
 
