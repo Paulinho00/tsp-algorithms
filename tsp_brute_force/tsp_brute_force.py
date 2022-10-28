@@ -101,7 +101,7 @@ def main():
         for i in range(0, int(parameters[1])):
             start = time.perf_counter()
             result = tsp_brute_force(adjacency_matrix, vertex_number)
-            end =  time.perf_counter()
+            end = time.perf_counter()
             # zapis wyniku
             writer.writerow([format_scientific(end - start, locale="pl_Pl"), result[0], result[1]])
     file.close()

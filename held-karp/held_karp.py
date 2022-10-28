@@ -1,5 +1,9 @@
 import csv
 import itertools
+import time
+
+from babel.numbers import format_scientific
+from memory_profiler import memory_usage
 
 from read_file import read_ini, read_data_tsp, read_data_txt
 
@@ -59,8 +63,15 @@ def main():
         else:
             adjacency_matrix, vertex_number = read_data_txt(parameters[0])
 
+        writer.writerow([parameters[0], parameters[1], parameters[2], parameters[3]])
+
+        start = time.perf_counter()
         result = held_karp(adjacency_matrix, vertex_number)
-        print(result)
+        end = time.perf_counter()
+        mem_usage = memory_usage((held_karp, (adjacency_matrix, vertex_number)))
+
+        writer.writerow([format_scientific(end - start, locale="pl_Pl"), result[0], result[1], max(mem_usage)])
+        print([format_scientific(end - start, locale="pl_Pl"), result[0], result[1]], max(mem_usage))
         pass
 
 
