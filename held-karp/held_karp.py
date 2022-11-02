@@ -64,15 +64,15 @@ def main():
             adjacency_matrix, vertex_number = read_data_txt(parameters[0])
 
         writer.writerow([parameters[0], parameters[1], parameters[2], parameters[3]])
+        for i in range(0, int(parameters[1])):
+            start = time.perf_counter()
+            result = held_karp(adjacency_matrix, vertex_number)
+            end = time.perf_counter()
+            mem_usage = memory_usage((held_karp, (adjacency_matrix, vertex_number)))
+            writer.writerow([format_scientific(end - start, locale="pl_Pl"), result[0], result[1], max(mem_usage)])
+            print([format_scientific(end - start, locale="pl_Pl"), result[0], result[1]], max(mem_usage))
 
-        start = time.perf_counter()
-        result = held_karp(adjacency_matrix, vertex_number)
-        end = time.perf_counter()
-        mem_usage = memory_usage((held_karp, (adjacency_matrix, vertex_number)))
-
-        writer.writerow([format_scientific(end - start, locale="pl_Pl"), result[0], result[1], max(mem_usage)])
-        print([format_scientific(end - start, locale="pl_Pl"), result[0], result[1]], max(mem_usage))
-        pass
+    file.close()
 
 
 if __name__ == '__main__':
