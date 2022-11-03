@@ -1,6 +1,7 @@
 import csv
 import math
 import time
+from queue import PriorityQueue
 
 import numpy as np
 from babel.numbers import format_scientific
@@ -15,6 +16,11 @@ class Node:
         self.path = path
         self.c = c
         self.matrix = matrix
+
+    def __lt__(self, other):
+        self_cost = self.c
+        other_cost = other.c
+        return self_cost < other_cost
 
 
 def  reduce_matrix(matrix):
@@ -100,6 +106,33 @@ def bnb_bfs(adjacency_matrix, graph, vertex_number):
             queue.append(Node(neighbor, node.path + [neighbor], sum_cost, new_matrix))
     return min_cost, path
 
+def bnb_best_first(adjacency_matrix, graph, vertex_number):
+    min_bound = math.inf
+    min_cost = math.inf
+    adjacency_matrix, c = reduce_matrix(adjacency_matrix)
+    path = []
+    path.append(0)
+    queue = PriorityQueue()
+    queue.put(Node(0, path, c, adjacency_matrix))
+    while queue.qsize() > 0:
+        node = queue.get()
+        if node.c > min_bound:
+            continue
+        if len(node.path) == vertex_number:
+            min_bound = node.c
+            min_cost = min_bound
+            node.path.append(0)
+            path = node.path
+
+        for neighbor in graph.neighbors(node.vertex):
+            if neighbor in node.path:
+                continue
+            new_matrix = insert_inf(node.matrix, node.vertex, neighbor)
+            new_matrix, c = reduce_matrix(new_matrix)
+            sum_cost = node.matrix[node.vertex][neighbor] + node.c + c
+            queue.put(Node(neighbor, node.path + [neighbor], sum_cost, new_matrix))
+    return min_cost, path
+
 
 def main():
     parameters = read_ini()
@@ -115,7 +148,7 @@ def main():
         writer.writerow([parameters[0], parameters[1], parameters[2], parameters[3]])
         for i in range(0, int(parameters[1])):
             start = time.perf_counter()
-            result = bnb_bfs(adjacency_matrix, graph, vertex_number)
+            result = bnb_best_first(adjacency_matrix, graph, vertex_number)
             end = time.perf_counter()
             mem_usage = memory_usage((bnb_bfs, (adjacency_matrix, graph, vertex_number)))
             writer.writerow([format_scientific(end - start, locale="pl_Pl"), result[0], result[1], max(mem_usage)])
