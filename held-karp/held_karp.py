@@ -10,13 +10,11 @@ from read_file import read_ini, read_data_tsp, read_data_txt
 
 def held_karp(adjacency_vertix, vertex_number):
     subsets = {}
-    parents = {}
     for i in range(1, vertex_number):
         subsets[((i,), i)] = (adjacency_vertix[0][i], 0)
-        parents[((i,), i)] = 0
 
-    for j in range(2, vertex_number):
-        for subset in itertools.combinations(range(1, vertex_number), j):
+    for i in range(2, vertex_number):
+        for subset in itertools.combinations(range(1, vertex_number), i):
 
             for last_vertex_in_subset in subset:
                 vertexes = [vertex for vertex in subset if vertex != last_vertex_in_subset]
@@ -26,26 +24,26 @@ def held_karp(adjacency_vertix, vertex_number):
                     if (tuple(vertexes), n) in subsets.keys():
                         path_weights.append(
                             (subsets[(tuple(vertexes), n)][0] + adjacency_vertix[n][last_vertex_in_subset],
-                             n,
-                             (tuple(vertexes), n)))
+                             n))
 
                 subsets[tuple(subset), last_vertex_in_subset] = (min(path_weights)[0], min(path_weights)[1])
-                parents[tuple(subset), last_vertex_in_subset] = min(path_weights)[2]
 
     route = []
-    vertex_set = tuple(range(1, vertex_number))
+    vertex_set = list(range(1, vertex_number))
 
     for i in vertex_set:
-        route.append((subsets[(vertex_set, i)][0] + adjacency_vertix[i][0], i))
+        route.append((subsets[(tuple(vertex_set), i)][0] + adjacency_vertix[i][0], i))
 
     optimal_cost = min(route)[0]
 
     min_path = [0, min(route)[1]]
-    parent = parents[(vertex_set, min_path[1])]
-    for i in range(2, vertex_number):
-        min_path.append(parent[1])
-        parent = parents[parent]
-        pass
+    parent = min(route)[1]
+
+    while len(min_path) != vertex_number:
+        next_parent = subsets[tuple(vertex_set), parent][1]
+        vertex_set.remove(parent)
+        parent = next_parent
+        min_path.append(parent)
 
     min_path.append(0)
     min_path.reverse()
