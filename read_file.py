@@ -28,16 +28,31 @@ def read_data_tsp(filename):
     adjacency_matrix = insert_inf(adjacency_matrix)
     return adjacency_matrix, len(adjacency_matrix), graph
 
+
 def read_ini():
     parameters = []
     file = open("config.ini", "r")
     file_lines = file.read().splitlines()
-
     for line in file_lines:
         instance_parameters = line.split(',')
         parameters.append(instance_parameters)
 
     return parameters
+
+
+def read_ini_bnb():
+    parameters = []
+    file = open("config.ini", "r")
+    file_lines = file.read().splitlines()
+    for index, line in enumerate(file_lines):
+        if index == 0:
+            option = int(line)
+            continue
+        instance_parameters = line.split(',')
+        parameters.append(instance_parameters)
+
+    return parameters, option
+
 
 def insert_inf(matrix):
     length = len(matrix)
