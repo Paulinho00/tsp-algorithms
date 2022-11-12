@@ -68,7 +68,7 @@ def main():
             end = time.perf_counter()
             mem_usage = memory_usage((held_karp, (adjacency_matrix, vertex_number)))
             writer.writerow([format_scientific(end - start, locale="pl_Pl"), result[0], result[1], format_scientific(max(mem_usage), locale="pl_Pl")])
-            print([format_scientific(end - start, locale="pl_Pl"), result[0], result[1]], max(mem_usage))
+            print([format_scientific(end - start, locale="pl_Pl"), result[0], result[1]], format_scientific(max(mem_usage), locale="pl_Pl"))
 
     file.close()
 

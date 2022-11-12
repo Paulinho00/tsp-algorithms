@@ -7,7 +7,7 @@ import numpy as np
 from babel.numbers import format_scientific
 from memory_profiler import memory_usage
 
-from read_file import read_ini, read_data_tsp, read_data_txt, read_ini_bnb
+from read_file import read_data_tsp, read_data_txt, read_ini_bnb
 
 
 class Node:
@@ -80,35 +80,6 @@ def bnb_dfs(adjacency_matrix, graph, vertex_number):
             stack.append(Node(neighbor, node.path + [neighbor], sum_cost, new_matrix))
     return min_cost, path
 
-
-def bnb_bfs(adjacency_matrix, graph, vertex_number):
-    min_bound = math.inf
-    min_cost = math.inf
-    adjacency_matrix, c = reduce_matrix(adjacency_matrix)
-    path = []
-    path.append(0)
-    queue = Queue()
-    queue.put(Node(0, path, c, adjacency_matrix))
-    while queue.qsize() > 0:
-        node = queue.get()
-        if node.c > min_bound:
-            continue
-        if len(node.path) == vertex_number:
-            min_bound = node.c
-            min_cost = min_bound
-            node.path.append(0)
-            path = node.path
-            continue
-
-        for neighbor in graph.neighbors(node.vertex):
-            if neighbor in node.path:
-                continue
-            new_matrix = insert_inf(node.matrix, node.vertex, neighbor)
-            new_matrix, c = reduce_matrix(new_matrix)
-            sum_cost = node.matrix[node.vertex][neighbor] + node.c + c
-            queue.put(Node(neighbor, node.path + [neighbor], sum_cost, new_matrix))
-    return min_cost, path
-
 def bnb_best_first(adjacency_matrix, graph, vertex_number):
     min_bound = math.inf
     min_cost = math.inf
@@ -158,17 +129,12 @@ def main():
                 mem_usage = memory_usage((bnb_dfs, (adjacency_matrix, graph, vertex_number)))
             elif option == 2:
                 start = time.perf_counter()
-                result = bnb_bfs(adjacency_matrix, graph, vertex_number)
-                end = time.perf_counter()
-                mem_usage = memory_usage((bnb_bfs, (adjacency_matrix, graph, vertex_number)))
-            elif option == 3:
-                start = time.perf_counter()
                 result = bnb_best_first(adjacency_matrix, graph, vertex_number)
                 end = time.perf_counter()
                 mem_usage = memory_usage((bnb_best_first, (adjacency_matrix, graph, vertex_number)))
 
             writer.writerow([format_scientific(end - start, locale="pl_Pl"), result[0], result[1], format_scientific(max(mem_usage), locale="pl_Pl")])
-            print([format_scientific(end - start, locale="pl_Pl"), result[0], result[1]], format_scientific(max(mem_usage), locale="pl_Pl"))
+            print([format_scientific(end - start, locale="pl_Pl"), result[0], result[1]],  format_scientific(max(mem_usage), locale="pl_Pl"))
 
     file.close()
 
