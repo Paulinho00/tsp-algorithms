@@ -33,12 +33,14 @@ def read_ini():
     parameters = []
     file = open("config.ini", "r")
     file_lines = file.read().splitlines()
-    for line in file_lines:
+    for index, line in enumerate(file_lines):
+        if index == 0:
+            option = int(line)
+            continue
         instance_parameters = line.split(',')
         parameters.append(instance_parameters)
 
-    return parameters
-
+    return parameters, option
 
 def read_ini_bnb():
     parameters = []
