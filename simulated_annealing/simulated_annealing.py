@@ -117,10 +117,13 @@ def main():
             start = time.perf_counter()
             result = simulated_annealing(adjacency_matrix, vertex_number, vertex_number*alpha)
             end = time.perf_counter()
-            print(result, 100 - optimal/result[1] * 100)
-            # mem_usage = memory_usage((held_karp, (adjacency_matrix, vertex_number)))
-            # writer.writerow([format_scientific(end - start, locale="pl_Pl"), result[0], result[1], format_scientific(max(mem_usage), locale="pl_Pl")])
-            # print([format_scientific(end - start, locale="pl_Pl"), result[0], result[1]], format_scientific(max(mem_usage), locale="pl_Pl"))
+            error = (result[1] - optimal)/result[1] * 100
+            if end - start > 1800:
+                print(f"Abort for: {parameters[0]}")
+                break
+            mem_usage = memory_usage((simulated_annealing, (adjacency_matrix, vertex_number, vertex_number*alpha)))
+            writer.writerow([format_scientific(end - start, locale="pl_Pl"), list(result[0]), result[1], str(error).replace('.', ','), format_scientific(max(mem_usage), locale="pl_Pl")])
+            print([format_scientific(end - start, locale="pl_Pl"), list(result[0]), result[1]], str(error).replace('.', ','), format_scientific(max(mem_usage), locale="pl_Pl"))
 
     file.close()
 
