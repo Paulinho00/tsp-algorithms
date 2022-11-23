@@ -115,13 +115,13 @@ def main():
         writer.writerow([parameters[0], parameters[1], parameters[2], parameters[3]])
         for i in range(0, int(parameters[1])):
             start = time.perf_counter()
-            result = simulated_annealing(adjacency_matrix, vertex_number, vertex_number*alpha)
+            result = simulated_annealing(adjacency_matrix, vertex_number, alpha)
             end = time.perf_counter()
             error = (result[1] - optimal)/result[1] * 100
             if end - start > 1800:
                 print(f"Abort for: {parameters[0]}")
                 break
-            mem_usage = memory_usage((simulated_annealing, (adjacency_matrix, vertex_number, vertex_number*alpha)))
+            mem_usage = memory_usage((simulated_annealing, (adjacency_matrix, vertex_number, alpha)))
             writer.writerow([format_scientific(end - start, locale="pl_Pl"), list(result[0]), result[1], str(error).replace('.', ','), format_scientific(max(mem_usage), locale="pl_Pl")])
             print([format_scientific(end - start, locale="pl_Pl"), list(result[0]), result[1]], str(error).replace('.', ','), format_scientific(max(mem_usage), locale="pl_Pl"))
 
