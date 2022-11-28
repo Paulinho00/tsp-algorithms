@@ -36,9 +36,9 @@ def nearest_neighbour(adjacency_matrix, vertex_number):
     return cost
 
 
-def set_initial_temp(rate, adjacency_matrix, vertex_number):
+def set_initial_temp(adjacency_matrix, vertex_number):
     cost = nearest_neighbour(adjacency_matrix, vertex_number)
-    return cost * rate
+    return cost / vertex_number
 
 
 def swap2(solution, vertex_number):
@@ -62,46 +62,55 @@ def calculate_cost(solution, adjacency_matrix):
     cost += adjacency_matrix[last_vertex][solution[0]]
     return cost
 
-def anneal_temp_geo(temp, alpha):
-    return alpha * temp
+
+def anneal_temp_geo(temp, alpha, k):
+    return math.pow(alpha, k) * temp
 
 
-def simulated_annealing(adjacency_matrix, vertex_number, era_length):
+def anneal_temp_log(temp, alpha, k, beta=0.0005):
+    return temp / (alpha + beta * math.log10(k))
+
+
+def simulated_annealing(adjacency_matrix, vertex_number, era_length, alpha, is_geo_annealing):
     solution = get_initial_solution(adjacency_matrix, vertex_number)
     solution_cost = calculate_cost(solution, adjacency_matrix)
-    prev_solution = math.inf
-    temp = set_initial_temp(100, adjacency_matrix, vertex_number)
+    prev_cost= math.inf
+    temp = set_initial_temp(adjacency_matrix, vertex_number)
     iterations_without_improvement = 0
-    while iterations_without_improvement < 50 and round(temp, 12) > 0:
+    iteration_counter = 0
+    while iterations_without_improvement < 50:
+        iteration_counter += 1
         i = era_length
-        if np.array_equal(prev_solution, solution):
+        if prev_cost == solution_cost:
             iterations_without_improvement += 1
         else:
             iterations_without_improvement = 0
+        prev_cost = solution_cost
+
         while i > 0:
             new_solution = swap2(solution, vertex_number)
             new_cost = calculate_cost(new_solution, adjacency_matrix)
             cost_difference = new_cost - solution_cost
             if cost_difference < 0:
-                prev_solution = solution
                 solution = new_solution
                 solution_cost = new_cost
             else:
-                options = [0, 1]
+                random_float = np.random.uniform()
                 probability = math.exp(-cost_difference/temp)
-                choice = np.random.choice(options, 1, p=[1 - probability, probability])
-                if choice == 1:
-                    prev_solution = solution
+                if random_float < probability:
                     solution = new_solution
                     solution_cost = new_cost
             i -= 1
-        temp = anneal_temp_geo(temp, 0.9)
+        if(is_geo_annealing):
+            temp = anneal_temp_geo(temp, alpha, iteration_counter)
+        else:
+            temp = anneal_temp_log(temp, alpha, iteration_counter)
 
-    return (solution, solution_cost)
+    return solution, solution_cost
 
 
 def main():
-    parameters, alpha = read_ini()
+    parameters, era_length, alpha = read_ini()
     file = open(parameters.pop()[0], 'w', newline='')
     writer = csv.writer(file, delimiter=";")
 
@@ -115,13 +124,13 @@ def main():
         writer.writerow([parameters[0], parameters[1], parameters[2], parameters[3]])
         for i in range(0, int(parameters[1])):
             start = time.perf_counter()
-            result = simulated_annealing(adjacency_matrix, vertex_number, alpha)
+            result = simulated_annealing(adjacency_matrix, vertex_number, era_length, alpha, False)
             end = time.perf_counter()
             error = (result[1] - optimal)/result[1] * 100
             if end - start > 1800:
                 print(f"Abort for: {parameters[0]}")
                 break
-            mem_usage = memory_usage((simulated_annealing, (adjacency_matrix, vertex_number, alpha)))
+            mem_usage = memory_usage((simulated_annealing, (adjacency_matrix, vertex_number, era_length, alpha, False)))
             writer.writerow([format_scientific(end - start, locale="pl_Pl"), list(result[0]), result[1], str(error).replace('.', ','), format_scientific(max(mem_usage), locale="pl_Pl")])
             print([format_scientific(end - start, locale="pl_Pl"), list(result[0]), result[1]], str(error).replace('.', ','), format_scientific(max(mem_usage), locale="pl_Pl"))
 

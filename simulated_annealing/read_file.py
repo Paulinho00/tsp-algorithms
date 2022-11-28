@@ -35,12 +35,14 @@ def read_ini():
     file_lines = file.read().splitlines()
     for index, line in enumerate(file_lines):
         if index == 0:
-            option = int(line)
+            options = line.split(',')
+            era_length = int(options[0])
+            alpha = float(options[1])
             continue
         instance_parameters = line.split(',')
         parameters.append(instance_parameters)
 
-    return parameters, option
+    return parameters, era_length, alpha
 
 def read_ini_bnb():
     parameters = []
