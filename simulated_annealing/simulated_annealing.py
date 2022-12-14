@@ -14,7 +14,7 @@ def get_initial_solution(adjacency_matrix, vertex_number):
     solution = np.arange(0, 1)
     last_vertex = 0
     while len(vertexes) != 0:
-        possible_neighbors = [index[0] for index, value in np.ndenumerate(adjacency_matrix[last_vertex]) if value != math.inf and index in vertexes ]
+        possible_neighbors = [index[0] for index, value in np.ndenumerate(adjacency_matrix[last_vertex]) if value != math.inf and index in vertexes]
         next_vertex_index = np.random.randint(len(possible_neighbors))
         last_vertex = possible_neighbors[next_vertex_index]
         solution = np.append(solution, last_vertex)
@@ -54,6 +54,19 @@ def swap2(solution, vertex_number):
     return new_solution
 
 
+def invert(solution, vertex_number):
+    index_first_vertex = np.random.randint(2, vertex_number)
+    index_second_vertex = np.random.randint(0, vertex_number)
+    if index_second_vertex == index_first_vertex:
+        return solution
+    else:
+        low_index = min(index_first_vertex, index_second_vertex)
+        high_index = max(index_first_vertex, index_second_vertex)
+        new_solution = np.copy(solution)
+        new_solution[low_index:high_index+1] = new_solution[low_index:high_index+1][::-1]
+    return new_solution
+
+
 def calculate_cost(solution, adjacency_matrix):
     cost = 0
     for index, vertex in np.ndenumerate(solution[:-1]):
@@ -67,28 +80,30 @@ def anneal_temp_geo(temp, alpha, k):
     return math.pow(alpha, k) * temp
 
 
-def anneal_temp_log(temp, alpha, k, beta=0.0005):
+def anneal_temp_log(temp, alpha, k, beta=0.01):
     return temp / (alpha + beta * math.log10(k))
 
 
-def simulated_annealing(adjacency_matrix, vertex_number, era_length, alpha, is_geo_annealing):
+def simulated_annealing(adjacency_matrix, vertex_number, era_length, alpha, beta, is_geo_annealing, is_swap):
     solution = get_initial_solution(adjacency_matrix, vertex_number)
     solution_cost = calculate_cost(solution, adjacency_matrix)
-    prev_cost= math.inf
+    prev_cost = math.inf
     temp = set_initial_temp(adjacency_matrix, vertex_number)
-    iterations_without_improvement = 0
-    iteration_counter = 0
-    while iterations_without_improvement < 50:
+    iterations_without_new_solution = 0
+    iteration_counter = 1
+    while iterations_without_new_solution < 50:
         iteration_counter += 1
         i = era_length
         if prev_cost == solution_cost:
-            iterations_without_improvement += 1
+            iterations_without_new_solution += 1
         else:
-            iterations_without_improvement = 0
+            iterations_without_new_solution = 0
         prev_cost = solution_cost
-
         while i > 0:
-            new_solution = swap2(solution, vertex_number)
+            if is_swap:
+                new_solution = swap2(solution, vertex_number)
+            else:
+                new_solution = invert(solution, vertex_number)
             new_cost = calculate_cost(new_solution, adjacency_matrix)
             cost_difference = new_cost - solution_cost
             if cost_difference < 0:
@@ -101,16 +116,17 @@ def simulated_annealing(adjacency_matrix, vertex_number, era_length, alpha, is_g
                     solution = new_solution
                     solution_cost = new_cost
             i -= 1
-        if(is_geo_annealing):
+        if is_geo_annealing:
             temp = anneal_temp_geo(temp, alpha, iteration_counter)
         else:
-            temp = anneal_temp_log(temp, alpha, iteration_counter)
+            temp = anneal_temp_log(temp, alpha, beta, iteration_counter)
 
+    solution = np.append(solution, solution[0])
     return solution, solution_cost
 
 
 def main():
-    parameters, era_length, alpha = read_ini()
+    parameters, era_length, alpha, beta, is_geo, is_swap = read_ini()
     file = open(parameters.pop()[0], 'w', newline='')
     writer = csv.writer(file, delimiter=";")
 
@@ -124,13 +140,13 @@ def main():
         writer.writerow([parameters[0], parameters[1], parameters[2], parameters[3]])
         for i in range(0, int(parameters[1])):
             start = time.perf_counter()
-            result = simulated_annealing(adjacency_matrix, vertex_number, era_length, alpha, False)
+            result = simulated_annealing(adjacency_matrix, vertex_number, era_length, alpha, beta, is_geo, is_swap)
             end = time.perf_counter()
-            error = (result[1] - optimal)/result[1] * 100
+            error = (result[1] - optimal)/optimal * 100
             if end - start > 1800:
                 print(f"Abort for: {parameters[0]}")
                 break
-            mem_usage = memory_usage((simulated_annealing, (adjacency_matrix, vertex_number, era_length, alpha, False)))
+            mem_usage = memory_usage((simulated_annealing, (adjacency_matrix, vertex_number, era_length, alpha, beta, is_geo, is_swap)))
             writer.writerow([format_scientific(end - start, locale="pl_Pl"), list(result[0]), result[1], str(error).replace('.', ','), format_scientific(max(mem_usage), locale="pl_Pl")])
             print([format_scientific(end - start, locale="pl_Pl"), list(result[0]), result[1]], str(error).replace('.', ','), format_scientific(max(mem_usage), locale="pl_Pl"))
 

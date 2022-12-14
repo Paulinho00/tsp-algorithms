@@ -38,11 +38,14 @@ def read_ini():
             options = line.split(',')
             era_length = int(options[0])
             alpha = float(options[1])
+            beta = float(options[2])
+            is_geo = bool(options[3])
+            is_swap = bool(int(options[4]))
             continue
         instance_parameters = line.split(',')
         parameters.append(instance_parameters)
 
-    return parameters, era_length, alpha
+    return parameters, era_length, alpha, beta, is_geo, is_swap
 
 def read_ini_bnb():
     parameters = []
