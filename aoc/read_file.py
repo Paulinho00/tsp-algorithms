@@ -5,7 +5,7 @@ import numpy as np
 import tsplib95
 
 
-def read_data_txt(filename):
+def read_data_txt(filename: str) -> (np.ndarray, int):
     adjacency_matrix = []
     file = open(filename, "r")
     file_lines = file.read().splitlines()
@@ -21,7 +21,7 @@ def read_data_txt(filename):
     return adjacency_matrix, vertex_number
 
 
-def read_data_tsp(filename):
+def read_data_tsp(filename: str) -> (np.ndarray, int):
     tsp = tsplib95.load(filename)
     graph = tsp.get_graph()
     adjacency_matrix = networkx.to_numpy_array(graph)
@@ -29,7 +29,7 @@ def read_data_tsp(filename):
     return adjacency_matrix, len(adjacency_matrix)
 
 
-def read_ini():
+def read_ini() -> (list, float, float, bool):
     parameters = []
     file = open("config.ini", "r")
     file_lines = file.read().splitlines()
@@ -45,21 +45,8 @@ def read_ini():
 
     return parameters, alpha, beta, is_cas
 
-def read_ini_bnb():
-    parameters = []
-    file = open("config.ini", "r")
-    file_lines = file.read().splitlines()
-    for index, line in enumerate(file_lines):
-        if index == 0:
-            option = int(line)
-            continue
-        instance_parameters = line.split(',')
-        parameters.append(instance_parameters)
 
-    return parameters, option
-
-
-def insert_inf(matrix):
+def insert_inf(matrix: np.ndarray) -> np.ndarray:
     length = len(matrix)
     for index, row in enumerate(matrix):
         row[index] = math.inf
