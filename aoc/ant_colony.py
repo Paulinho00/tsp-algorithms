@@ -1,8 +1,7 @@
 import csv
 import math
+import random
 import time
-from collections import Counter
-
 import numpy as np
 from babel.numbers import format_scientific
 from memory_profiler import memory_usage
@@ -10,6 +9,7 @@ from memory_profiler import memory_usage
 from aoc.ant.Ant import Ant
 from aoc.path_functions.path_functions import calculate_cost, get_initial_solution
 from aoc.read_file import read_ini, read_data_tsp, read_data_txt
+
 
 def initialize_pheromone_matrix(vertex_number, aprox_cost):
     starting_pheromone = vertex_number / aprox_cost
@@ -19,34 +19,16 @@ def initialize_pheromone_matrix(vertex_number, aprox_cost):
 
 def select_vertex(ant, adjacency_matrix, vertex_number, alpha, beta, pheromone_matrix):
 
-    probabilities = np.empty((vertex_number,), dtype=object)
-    denominator = 0
-
+    probabilities = list()
     for vertex in ant.unvisited_vertices:
         if adjacency_matrix[ant.current_vertex][vertex] > 0:
-            denominator += pow(pheromone_matrix[ant.current_vertex][vertex], alpha) *\
-                           pow(1 / adjacency_matrix[ant.current_vertex][vertex], beta)
+            probabilities.append(pow(pheromone_matrix[ant.current_vertex][vertex], alpha) *\
+                                     pow(1 / adjacency_matrix[ant.current_vertex][vertex], beta))
         else:
-            denominator += pow(pheromone_matrix[ant.current_vertex][vertex], alpha) * \
-                           pow(1 / 0.1, beta)
+            probabilities.append(pow(pheromone_matrix[ant.current_vertex][vertex], alpha) *\
+                                     pow(1 / 0.1, beta))
 
-    for vertex in range(vertex_number):
-        if vertex not in ant.unvisited_vertices:
-            probabilities[vertex] = (vertex, 0.0)
-        elif adjacency_matrix[ant.current_vertex][vertex] > 0:
-            probabilities[vertex] = (vertex, pow(pheromone_matrix[ant.current_vertex][vertex], alpha) *\
-                           pow(1 / adjacency_matrix[ant.current_vertex][vertex], beta) / denominator)
-        else:
-            probabilities[vertex] = (vertex, pow(pheromone_matrix[ant.current_vertex][vertex], alpha) * \
-                pow(1 / 0.1, beta) / denominator)
-
-    probabilities.sort()
-    probabilities_sum = 0
-    random_float = np.random.uniform()
-    for pair in probabilities:
-        probabilities_sum += pair[1]
-        if random_float < probabilities_sum:
-            return pair[0]
+    return random.choices(ant.unvisited_vertices, weights=probabilities)
 
 
 def evaporate_cas(pheromone_matrix, ant_colony, adjacency_matrix):
@@ -58,11 +40,11 @@ def evaporate_cas(pheromone_matrix, ant_colony, adjacency_matrix):
 
     return pheromone_matrix
 
+
 def aoc(adjacency_matrix, vertex_number,
         alpha, beta, is_cas):
     solution_cost = math.inf
     solution = []
-    ant_counter = 0
     initial_solution = get_initial_solution(adjacency_matrix, vertex_number)
     initial_solution_cost = calculate_cost(initial_solution, adjacency_matrix)
     pheromone_matrix = initialize_pheromone_matrix(vertex_number, initial_solution_cost)
@@ -72,16 +54,23 @@ def aoc(adjacency_matrix, vertex_number,
         for ant in ant_colony:
             while len(ant.path) != vertex_number:
                 selected_vertex = select_vertex(ant, adjacency_matrix, vertex_number, alpha, beta, pheromone_matrix)
-                ant.visit(selected_vertex)
-
+                if not is_cas:
+                    if adjacency_matrix[ant.current_vertex][selected_vertex] != 0:
+                        pheromone_matrix[ant.current_vertex][selected_vertex] +=\
+                            100 / adjacency_matrix[ant.current_vertex][selected_vertex]
+                    else:
+                        pheromone_matrix[ant.current_vertex][selected_vertex] += \
+                            100 / 0.1
+                ant.visit(selected_vertex[0])
             path_cost = calculate_cost(ant.path, adjacency_matrix)
             if path_cost < solution_cost:
                 solution_cost = path_cost
                 solution = ant.path
-                changed = True
 
         if is_cas:
             pheromone_matrix = evaporate_cas(pheromone_matrix, ant_colony, adjacency_matrix)
+        else:
+            pheromone_matrix = np.multiply(pheromone_matrix, 0.5)
         ant_counter += vertex_number
     solution = np.append(solution, solution[0])
     return solution, solution_cost
@@ -109,8 +98,10 @@ def main():
                 print(f"Abort for: {parameters[0]}")
                 break
             mem_usage = memory_usage((aoc, (adjacency_matrix, vertex_number, alpha, beta, is_cas)))
-            writer.writerow([format_scientific(end - start, locale="pl_Pl"), list(result[0]), result[1], str(error).replace('.', ','), format_scientific(max(mem_usage), locale="pl_Pl")])
-            print([format_scientific(end - start, locale="pl_Pl"), list(result[0]), result[1]], str(error).replace('.', ','), format_scientific(max(mem_usage), locale="pl_Pl"))
+            writer.writerow([format_scientific(end - start, locale="pl_Pl"), list(result[0]), result[1],
+                             str(error).replace('.', ','), format_scientific(max(mem_usage), locale="pl_Pl")])
+            print([format_scientific(end - start, locale="pl_Pl"), list(result[0]), result[1]],
+                  str(error).replace('.', ','), format_scientific(max(mem_usage), locale="pl_Pl"))
 
     file.close()
 
