@@ -7,7 +7,7 @@ from babel.numbers import format_scientific
 from memory_profiler import memory_usage
 
 from aoc.ant.Ant import Ant
-from aoc.path_functions.path_functions import calculate_cost, get_initial_solution
+from aoc.path_functions.path_functions import calculate_cost, nearest_neighbour
 from aoc.read_file import read_ini, read_data_tsp, read_data_txt
 
 
@@ -45,8 +45,7 @@ def aoc(adjacency_matrix, vertex_number,
         alpha, beta, is_cas):
     solution_cost = math.inf
     solution = []
-    initial_solution = get_initial_solution(adjacency_matrix, vertex_number)
-    initial_solution_cost = calculate_cost(initial_solution, adjacency_matrix)
+    initial_solution_cost = nearest_neighbour(adjacency_matrix, vertex_number)
     pheromone_matrix = initialize_pheromone_matrix(vertex_number, initial_solution_cost)
     ant_counter = 0
     while ant_counter < 1000:

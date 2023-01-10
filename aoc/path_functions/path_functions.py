@@ -3,17 +3,18 @@ import math
 import numpy as np
 
 
-def get_initial_solution(adjacency_matrix, vertex_number):
-    vertices = np.arange(1, vertex_number)
-    solution = np.arange(0, 1)
+def nearest_neighbour(adjacency_matrix, vertex_number):
+    vertexes = np.arange(1, vertex_number)
     last_vertex = 0
-    while len(vertices) != 0:
-        possible_neighbors = [index[0] for index, value in np.ndenumerate(adjacency_matrix[last_vertex]) if value != math.inf and index in vertices]
-        next_vertex_index = np.random.randint(len(possible_neighbors))
-        last_vertex = possible_neighbors[next_vertex_index]
-        solution = np.append(solution, last_vertex)
-        vertices = np.delete(vertices, next_vertex_index)
-    return solution
+    cost = 0
+    while len(vertexes) != 0:
+        unvisited_neighbours = {index[0]: value for index, value in np.ndenumerate(adjacency_matrix[last_vertex]) if value != math.inf and index in vertexes}
+        next_vertex = min(unvisited_neighbours, key=unvisited_neighbours.get)
+        cost += adjacency_matrix[last_vertex][next_vertex]
+        vertexes = vertexes[vertexes != next_vertex]
+        last_vertex = next_vertex
+
+    return cost
 
 
 def calculate_cost(solution, adjacency_matrix):
